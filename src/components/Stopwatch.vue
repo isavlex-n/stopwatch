@@ -1,35 +1,29 @@
 <script>
 export default {
-  emits: ['update:start', 'update:stop', 'update:reset'],
+  emits: ['update:toggle', 'update:reset'],
   props: ['stopwatch'],
   computed: {
-    hours() {
-      return Math.floor(this.stopwatch.time / 3600)
-    },
-    minutes() {
-      return Math.floor((this.stopwatch.time / 60) % 60)
-    },
-    seconds() {
-      return this.stopwatch.time % 60
-    },
-  },
-  methods: {
-    formatTime(timeValue) {
-      return timeValue ? timeValue + ':' : ''
-    },
+    formatTime() {
+      const seconds = Math.floor(this.stopwatch.elapsed / 1000)
+      const minutes = Math.floor(seconds / 60)
+      const hours = Math.floor(minutes / 60)
+      const minutesStr = minutes ? (minutes % 60) + ':' : ''
+      const hoursStr = hours ? hours + ':' : ''
+      return `${hoursStr}${minutesStr}${seconds % 60}`
+    }
   },
 }
 </script>
 <template>
-  <div class="stopwatch" :class="{ stopwatch_start: stopwatch.timerRunning }">
+  <div class="stopwatch" :class="{ stopwatch_start: stopwatch.isRunning }">
     <div class="stopwatch__timer">
-      <span>{{ formatTime(hours) }}{{ formatTime(minutes) }}{{ seconds }}</span>
+      <span>{{ formatTime }}</span>
     </div>
     <div class="stopwatch__controls">
       <button
         class="stopwatch__start"
-        @click="$emit('update:start', stopwatch.id)"
-        v-show="!stopwatch.timerRunning"
+        @click="$emit('update:toggle', stopwatch.id)"
+        v-show="!stopwatch.isRunning"
       >
         <svg
           width="17"
@@ -43,8 +37,8 @@ export default {
       </button>
       <button
         class="stopwatch__start"
-        @click="$emit('update:stop', stopwatch.id)"
-        v-show="stopwatch.timerRunning"
+        @click="$emit('update:toggle', stopwatch.id)"
+        v-show="stopwatch.isRunning"
       >
         <svg
           width="10"

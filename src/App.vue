@@ -11,34 +11,38 @@ export default {
     addStopwatch() {
       this.stopwatches.push({
         id: Date.now(),
-        time: 0,
-        timerRunning: false,
-        timer: null,
+        isRunning: false,
+        elapsed: 0,
+        lastTick: null,
       })
     },
-    startTimer(id) {
+    toggleTimer(id) {
       const stopwatch = this.stopwatches.find(
         (stopwatch) => stopwatch.id === id,
       )
-      stopwatch.timerRunning = true
-      stopwatch.timer = setInterval(() => {
-        stopwatch.time++
-      }, 1000)
+      stopwatch.isRunning = !stopwatch.isRunning
+      if (stopwatch.isRunning) {
+        stopwatch.lastTick = Date.now()
+        this.tick(stopwatch)
+      }
     },
-    stopTimer(id) {
-      const stopwatch = this.stopwatches.find(
-        (stopwatch) => stopwatch.id === id,
-      )
-      stopwatch.timerRunning = false
-      clearInterval(stopwatch.timer)
+    tick(stopwatch) {
+      const now = Date.now()
+      const delta = now - stopwatch.lastTick
+      stopwatch.lastTick = now
+      if(stopwatch.isRunning) {
+        stopwatch.elapsed += delta
+        requestAnimationFrame(() => {
+          this.tick(stopwatch)
+        })
+      }
     },
     resetTimer(id) {
       const stopwatch = this.stopwatches.find(
         (stopwatch) => stopwatch.id === id,
       )
-      stopwatch.timerRunning = false
-      stopwatch.time = 0
-      clearInterval(stopwatch.timer)
+      stopwatch.isRunning = false
+      stopwatch.elapsed = 0
     },
   },
   components: {
@@ -54,8 +58,7 @@ export default {
       <stopwatch
         v-for="stopwatch in stopwatches"
         :stopwatch="stopwatch"
-        @update:start="startTimer($event)"
-        @update:stop="stopTimer($event)"
+        @update:toggle="toggleTimer($event)"
         @update:reset="resetTimer($event)"
       ></stopwatch>
       <stopwatch-add @update:add="addStopwatch"></stopwatch-add>
